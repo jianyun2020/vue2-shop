@@ -4,7 +4,7 @@
       <div @mouseleave="leaveShow">
         <h2 class="all">全部商品分类</h2>
         <div class="sort">
-          <div class="all-sort-list2">
+          <div class="all-sort-list2" @click="goSearch">
             <div
               class="item bo"
               v-for="(c1, index) in categoryList"
@@ -14,9 +14,16 @@
                 @mouseenter="changeCurrentIndex(index)"
                 :class="{ cur: currentIndex === index }"
               >
-                <a href="">{{ c1.categoryName }}</a>
+                <a
+                  :data-category-name="c1.categoryName"
+                  :data-category1Id="c1.categoryId"
+                  >{{ c1.categoryName }}</a
+                >
               </h3>
-              <div class="item-list clearfix" :style="{ display: currentIndex === index ? 'block' : 'none' }">
+              <div
+                class="item-list clearfix"
+                :style="{ display: currentIndex === index ? 'block' : 'none' }"
+              >
                 <div class="subitem">
                   <dl
                     class="fore"
@@ -24,11 +31,19 @@
                     :key="c2.categoryId"
                   >
                     <dt>
-                      <a href="">{{ c2.categoryName }}</a>
+                      <a
+                        data-category-name="c2.categoryName"
+                        :data-category2Id="c2.categoryId"
+                        >{{ c2.categoryName }}</a
+                      >
                     </dt>
                     <dd>
                       <em v-for="c3 in c2.categoryChild" :key="c3.categoryId">
-                        <a href="">{{ c3.categoryName }}</a>
+                        <a
+                          data-category-name="c3.categoryName"
+                          :data-category3Id="c3.categoryId"
+                          >{{ c3.categoryName }}</a
+                        >
                       </em>
                     </dd>
                   </dl>
@@ -54,6 +69,9 @@
 
 <script>
 import { mapState } from "vuex";
+
+import throttle from "lodash/throttle";
+
 export default {
   name: "typeNav",
   data() {
@@ -70,11 +88,37 @@ export default {
     }),
   },
   methods: {
-    changeCurrentIndex(index) {
+    changeCurrentIndex: throttle(function (index) {
       this.currentIndex = index;
-    },
+    }, 30),
     leaveShow() {
       this.currentIndex = -1;
+    },
+    goSearch(event) {
+      const node = event.target;
+
+      let { categoryName, category1id, category2id, category3id } =
+        node.dataset;
+
+      if (categoryName) {
+        let location = { name: "search" };
+        let query = { categoryName: categoryName };
+
+        if (category1id) {
+          query.category1id = category1id;
+        } else if (category2id) {
+          query.category2id = category2id;
+        } else {
+          query.category3id = category3id;
+        }
+
+        if (this.$route.params) {
+          location.params = this.$route.params;
+          location.query = query;
+
+          this.$router.push(location);
+        }
+      }
     },
   },
 };
